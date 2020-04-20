@@ -5,16 +5,16 @@ import { useSelector } from 'react-redux';
 const ProductsOverviewScreen = props => {
 	const products = useSelector(state => state.products.availableProducts);
 	return (
-		<FlatList 
-			data={products} 
+		<FlatList
+			data={products}
 			keyExtractor={item => item.id}
-			renderitem={itemData => <Text>{itemData.item.title}</Text>} 
+			renderItem={itemData => <Text>{itemData.item.title}</Text>}
 		/>
 	);
 };
 
 ProductsOverviewScreen.navigationOptions = {
 	headerTitle: 'All Products'
-}
+};
 
 export default ProductsOverviewScreen;
