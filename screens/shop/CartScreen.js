@@ -22,8 +22,8 @@ const CartScreen = props => {
 				totalPrice: thisItem.totalPrice
 			});
 		}
-		return transformedCartItems.sort(
-			(a, b) => a.productId > b.productId ? 1 : -1
+		return transformedCartItems.sort( (a, b) => 
+			a.productId > b.productId ? 1 : -1
 		);
 	});
 
@@ -33,7 +33,7 @@ const CartScreen = props => {
 		<View style={styles.screen}>
 			<View style={styles.summary}>
 				<Text style={styles.summaryText}>
-					Total: <Text style={styles.price}>${cartTotalPrice >= 0 ? cartTotalPrice.toFixed(2) : 0}</Text>
+					Total:{' '}<Text style={styles.price}>${cartTotalPrice >= 0 ? cartTotalPrice.toFixed(2) : 0}</Text>
 				</Text>
 				<Button 
 					color={Colors.accent} 
@@ -62,6 +62,10 @@ const CartScreen = props => {
 		</View>
 	);
 };
+
+CartScreen.navigationOptions = {
+	headerTitle: 'Your Cart'
+}
 
 const styles = StyleSheet.create({
 	screen: {
