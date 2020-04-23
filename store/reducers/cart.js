@@ -1,5 +1,6 @@
 import { ADD_TO_CART, REMOVE_FROM_CART } from '../actions/cart';
 import { ADD_ORDER } from '../actions/order';
+import { DELETE_PRODUCT } from '../actions/products';
 
 import CartItem from '../../models/cart-item';
 
@@ -26,6 +27,11 @@ export default (state = initialState, action) => {
 					productTitle,
 					state.items[addedProduct.id].totalPrice + productPrice
 				);
+
+
+					// i was converting title to productTitle for cart items
+
+
 			} else {
 				cartUpdate = new CartItem(1, productPrice, productTitle, productPrice);
 			}
@@ -67,6 +73,18 @@ export default (state = initialState, action) => {
 			}
 		case ADD_ORDER:
 			return initialState;
+		case DELETE_PRODUCT:
+			if (!state.items[action.productId]) {
+				return state;
+			}
+			const updatedItems = {...state.items};
+			const itemTotal = state.items[action.productId].totalPrice;
+			delete updatedItems[action.productId];
+			return {
+				...state,
+				items: updatedItems,
+				totalPrice: state.totalPrice - itemTotal
+			}
 		default:
 			return state;
 	}

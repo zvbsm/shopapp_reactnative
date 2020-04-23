@@ -7,16 +7,17 @@ const CartItem = props => {
 		<View style={styles.cartItem}>
 			<View style={styles.itemData}>
 				<Text style={styles.quantity}>{props.quantity} </Text> 
-				<Text style={styles.boldText}>{props.title}</Text>
+				<Text style={styles.boldText}>{props.productTitle}</Text>
 			</View>
 			<View style={styles.itemData}>
 				<Text style={styles.boldText}>${props.totalPrice.toFixed(2)}</Text>
-				<TouchableOpacity onPress={props.onRemove} style={styles.deleteButton}>
+				{/* if deletable, display this component */}
+				{props.deletable && <TouchableOpacity onPress={props.onRemove} style={styles.deleteButton}>
 					<Ionicons 
 						name={Platform.OS === 'android' ? 'md-trash' : 'ios-trash'}
 						size={23}
 						color="red" />
-				</TouchableOpacity>
+				</TouchableOpacity>}
 			</View>
 		</View>
 	);
