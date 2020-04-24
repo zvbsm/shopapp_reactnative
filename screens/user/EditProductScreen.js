@@ -1,10 +1,11 @@
 import React, { useEffect, useCallback, useReducer } from 'react';
-import { View, Text, TextInput, ScrollView, StyleSheet, Platform, Alert } from 'react-native';
+import { View, ScrollView, StyleSheet, Platform, Alert } from 'react-native';
 import { HeaderButtons, Item } from 'react-navigation-header-buttons';
 import { useSelector, useDispatch } from 'react-redux';
 
 import HeaderButton from '../../components/UI/HeaderButton';
 import * as productsActions from '../../store/actions/products';
+import Input from '../../components/UI/Input';
 
 const FORM_UPDATE = 'FORM_UPDATE';
 // reducer's are generally method's that take in data and output some form of data
@@ -131,70 +132,71 @@ const EditProductScreen = props => {
 
 	// input to specify which input triggered the validation
 	// text of what was entered by the user
-	const textChangeHandler = (input, text) => {
-		let isValid = false;
-
-		// trim to exclude whitespace from being valid
-		if (text.trim().length > 0) {
-			isValid = true;
-		}
-
+	// useCallback to avoid having this function re-built unecessarily
+	const inputChangeHandler = useCallback((inputId, inputValue, inputValidity) => {
 		// additional params after type are optional to pass any additional data desired
 		dispatchFormState({ 
 			type: FORM_UPDATE, 
-			value: text, 
-			isValid: isValid, 
+			value: inputValue, 
+			isValid: inputValidity, 
 			// input to specify which input triggered this validation
-			input: input 
+			input: inputId
 		});
-	};
+	}, [dispatchFormState]);
 
 	return (
 		<ScrollView>
 			<View style={styles.form}>
-				<View style={styles.inputContainerView}>
-					<Text style={styles.title}>Title</Text>
-					{/* when text changes, get that new text and set title with it */}
-					<TextInput 
-						style={styles.input} 
-						value={formState.inputValues.title} 
-						// the input id should match the id specified in the useReducer method
-						onChangeText={textChangeHandler.bind(this, 'title')}
-						keyboardType='default'
-						autoCapitalize='sentences'
-						autoCorrect
-						returnKeyType='next'
-						onEndEditing={() => console.log('onEndEditing')} 
-						onSubmitEditing={() => console.log('onSubmitEditing')} />
-					{/* autoCorrect={false} to manually disable 
-						onSubmitEditing is triggered when the return/next key is pressed*/}
-						{!formState.inputValidities.title && <Text>Please enter a valid title</Text>}
-				</View>
-				<View style={styles.inputContainerView}>
-					<Text style={styles.title}>Image URL</Text>
-					<TextInput 
-						style={styles.input} 
-						value={formState.inputValues.imageUrl}
-						onChangeText={textChangeHandler.bind(this, 'imageUrl')} />
-				</View>
+				<Input
+					id="title"
+					label="Title"
+					errorText="Please enter a valid title"
+					keyboardType="default"
+					autoCapitalize="sentences"
+					autoCorrect
+					returnKeyType="next"
+					onInputChange={inputChangeHandler}
+					initialValue={editedProduct ? editedProduct.title : ''}
+					// if editedProduct exists, returns true, otherwise false
+					initialValid={!!editedProduct}
+					required />
+				<Input
+					id="imageUrl"
+					label="Image URL"
+					errorText="Please enter a valid Image URL"
+					keyboardType="default"
+					returnKeyType="next"
+					onInputChange={inputChangeHandler}
+					initialValue={editedProduct ? editedProduct.imageUrl : ''}
+					initialValid={!!editedProduct}
+					required />
 				{/* if in edit mode, dont price display element */}
 				{editedProduct ? null : 
-					<View style={styles.inputContainerView}>
-						<Text style={styles.title}>Price</Text>
-						<TextInput 
-							style={styles.input}
-							value={formState.inputValues.price}
-							onChangeText={textChangeHandler.bind(this, 'price')}
-							keyboardType='decimal-pad' />
-					</View>
+					<Input
+						id="price"
+						label="Price"
+						errorText="Please enter a valid price"
+						keyboardType="decimal-pad"
+						returnKeyType="next"
+						onInputChange={inputChangeHandler}
+						required
+						min={0.01} />
 				}
-				<View style={styles.inputContainerView}>
-					<Text style={styles.title}>Description</Text>
-					<TextInput 
-						style={styles.input}
-						value={formState.inputValues.description}
-						onChangeText={textChangeHandler.bind(this, 'description')} />
-				</View>
+				<Input
+					id="description"
+					label="Description"
+					errorText="Please enter a valid description"
+					keyboardType="default"
+					autoCapitalize="sentences"
+					autoCorrect
+					multiline
+					// numberOfLines only works on android
+					numberOfLines={3}
+					onInputChange={inputChangeHandler}
+					initialValue={editedProduct ? editedProduct.description : ''}
+					initialValid={!!editedProduct}
+					required
+					minLength={5} />
 			</View>
 		</ScrollView>
 	);
@@ -221,19 +223,6 @@ EditProductScreen.navigationOptions = navigationData => {
 const styles = StyleSheet.create({
 	form: {
 		margin: 20
-	},
-	inputContainerView: {
-		width: '100%'
-	},
-	title: {
-		fontFamily: 'open-sans-bold',
-		marginVertical: 8
-	},
-	input: {
-		paddingHorizontal: 2,
-		paddingVertical: 5,
-		borderBottomColor: '#CCC',
-		borderBottomWidth: 1
 	}
 });
 
