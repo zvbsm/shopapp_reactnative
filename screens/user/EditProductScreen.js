@@ -27,7 +27,7 @@ const EditProductScreen = props => {
 		Alert.alert('Are you sure?', 'Do you really want to delete this item?', [
 			{ text: 'No', style: 'default' },
 			{ text: 'Yes', style: 'destructive', onPress: () => {
-					// delete
+					dispatch(productsActions.deleteProduct(productId));
 				} 
 			},
 		]);
