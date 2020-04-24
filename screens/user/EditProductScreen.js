@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useReducer } from 'react';
-import { View, ScrollView, StyleSheet, Platform, Alert } from 'react-native';
+import { View, ScrollView, StyleSheet, Platform, Alert, KeyboardAvoidingView } from 'react-native';
 import { HeaderButtons, Item } from 'react-navigation-header-buttons';
 import { useSelector, useDispatch } from 'react-redux';
 
@@ -145,60 +145,66 @@ const EditProductScreen = props => {
 	}, [dispatchFormState]);
 
 	return (
-		<ScrollView>
-			<View style={styles.form}>
-				<Input
-					id="title"
-					label="Title"
-					errorText="Please enter a valid title"
-					keyboardType="default"
-					autoCapitalize="sentences"
-					autoCorrect
-					returnKeyType="next"
-					onInputChange={inputChangeHandler}
-					initialValue={editedProduct ? editedProduct.title : ''}
-					// if editedProduct exists, returns true, otherwise false
-					initialValid={!!editedProduct}
-					required />
-				<Input
-					id="imageUrl"
-					label="Image URL"
-					errorText="Please enter a valid Image URL"
-					keyboardType="default"
-					returnKeyType="next"
-					onInputChange={inputChangeHandler}
-					initialValue={editedProduct ? editedProduct.imageUrl : ''}
-					initialValid={!!editedProduct}
-					required />
-				{/* if in edit mode, dont price display element */}
-				{editedProduct ? null : 
+		// flex:1 is necessary for the component to have an effect on the view
+		<KeyboardAvoidingView 
+			style={{flex: 1}} 
+			behavior="padding" 
+			keyboardVerticalOffset={100}>
+			<ScrollView>
+				<View style={styles.form}>
 					<Input
-						id="price"
-						label="Price"
-						errorText="Please enter a valid price"
-						keyboardType="decimal-pad"
+						id="title"
+						label="Title"
+						errorText="Please enter a valid title"
+						keyboardType="default"
+						autoCapitalize="sentences"
+						autoCorrect
 						returnKeyType="next"
 						onInputChange={inputChangeHandler}
+						initialValue={editedProduct ? editedProduct.title : ''}
+						// if editedProduct exists, returns true, otherwise false
+						initialValid={!!editedProduct}
+						required />
+					<Input
+						id="imageUrl"
+						label="Image URL"
+						errorText="Please enter a valid Image URL"
+						keyboardType="default"
+						returnKeyType="next"
+						onInputChange={inputChangeHandler}
+						initialValue={editedProduct ? editedProduct.imageUrl : ''}
+						initialValid={!!editedProduct}
+						required />
+					{/* if in edit mode, dont price display element */}
+					{editedProduct ? null :
+						<Input
+							id="price"
+							label="Price"
+							errorText="Please enter a valid price"
+							keyboardType="decimal-pad"
+							returnKeyType="next"
+							onInputChange={inputChangeHandler}
+							required
+							min={0.01} />
+					}
+					<Input
+						id="description"
+						label="Description"
+						errorText="Please enter a valid description"
+						keyboardType="default"
+						autoCapitalize="sentences"
+						autoCorrect
+						multiline
+						// numberOfLines only works on android
+						numberOfLines={3}
+						onInputChange={inputChangeHandler}
+						initialValue={editedProduct ? editedProduct.description : ''}
+						initialValid={!!editedProduct}
 						required
-						min={0.01} />
-				}
-				<Input
-					id="description"
-					label="Description"
-					errorText="Please enter a valid description"
-					keyboardType="default"
-					autoCapitalize="sentences"
-					autoCorrect
-					multiline
-					// numberOfLines only works on android
-					numberOfLines={3}
-					onInputChange={inputChangeHandler}
-					initialValue={editedProduct ? editedProduct.description : ''}
-					initialValid={!!editedProduct}
-					required
-					minLength={5} />
-			</View>
-		</ScrollView>
+						minLength={5} />
+				</View>
+			</ScrollView>
+		</KeyboardAvoidingView>
 	);
 };
 
