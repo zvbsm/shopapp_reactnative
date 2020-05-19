@@ -48,8 +48,14 @@ export const fetchProducts = () => {
 };
 
 export const deleteProduct = productId => {
-	return {
-		type: DELETE_PRODUCT, productId: productId
+	return async dispatch => {
+		await fetch(`https://shopappreactnative.firebaseio.com/products/${productId}.json`, {
+			method: 'DELETE'
+		});
+
+		dispatch({
+				type: DELETE_PRODUCT, productId: productId
+		});
 	}
 };
 
@@ -89,13 +95,29 @@ export const createProduct = (title, description, imageUrl, price) => {
 
 // price not included because it should not be editable
 export const updateProduct = (productId, title, description, imageUrl) => {
-	return {
-		type: UPDATE_PRODUCT,
-		productId,
-		productData: {
-			title,
-			description,
-			imageUrl
-		}
-	}
+	return async dispatch => {
+
+		await fetch(`https://shopappreactnative.firebaseio.com/products/${productId}.json`, {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			// firebase will auto generate the id as "name"
+			body: JSON.stringify({
+				title,
+				description,
+				imageUrl
+			})
+		});
+
+		dispatch({
+			type: UPDATE_PRODUCT,
+			productId,
+			productData: {
+				title,
+				description,
+				imageUrl
+			}
+		});
+	};
 };
