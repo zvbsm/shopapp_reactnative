@@ -11,6 +11,7 @@ import Colors from '../../constants/Colors';
 
 const ProductsOverviewScreen = props => {
 	const [isLoading, setIsLoading] = useState(false);
+	const [isRefreshing, setIsRefreshing] = useState(false);
 	const [error, setError] = useState();
 	const products = useSelector(state => state.products.availableProducts);
 	const dispatch = useDispatch();
@@ -21,6 +22,7 @@ const ProductsOverviewScreen = props => {
 		setError(null);
 		// removed setIsLoading to use in pull to refresh method
 		// setIsLoading(true);
+		setIsRefreshing(true);
 		try {
 			// await - dispatch will hold until promise is resolved  and then continue next line
 			await dispatch(productsActions.fetchProducts());
@@ -28,6 +30,7 @@ const ProductsOverviewScreen = props => {
 			setError(e.message);
 		}
 		// setIsLoading(false);
+		setIsRefreshing(false);
 	}, [dispatch, setIsLoading, setError]);
 
 	useEffect(() => {
@@ -40,7 +43,10 @@ const ProductsOverviewScreen = props => {
 	}, [loadProducts]);
 
 	useEffect(() => {
-		loadProducts();
+		setIsLoading(true);
+		loadProducts().then(() => {
+			setIsLoading(false);
+		});
 	}, [dispatch, loadProducts]);
 
 	const selectItemHandler = (id, title) => {
@@ -79,8 +85,8 @@ const ProductsOverviewScreen = props => {
 		// onRefresh - points to a method to be ran when the pull to refresh action occurs
 		// refreshing - points to a useState variable that indicates if currently loading or not
 		<FlatList
-			// onRefresh={loadProducts}
-			// refreshing={isLoading}
+			onRefresh={loadProducts}
+			refreshing={isRefreshing}
 			data={products}
 			keyExtractor={item => item.id}
 			renderItem={itemData => 
