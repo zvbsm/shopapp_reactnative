@@ -1,11 +1,12 @@
-import React, { useEffect, useCallback, useReducer } from 'react';
-import { View, ScrollView, StyleSheet, Platform, Alert, KeyboardAvoidingView } from 'react-native';
+import React, { useState, useEffect, useCallback, useReducer } from 'react';
+import { View, ScrollView, StyleSheet, Platform, Alert, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
 import { HeaderButtons, Item } from 'react-navigation-header-buttons';
 import { useSelector, useDispatch } from 'react-redux';
 
 import HeaderButton from '../../components/UI/HeaderButton';
 import * as productsActions from '../../store/actions/products';
 import Input from '../../components/UI/Input';
+import Colors from '../../constants/Colors';
 
 const FORM_UPDATE = 'FORM_UPDATE';
 // reducer's are generally method's that take in data and output some form of data
@@ -43,6 +44,9 @@ const formReducer = (state, action) => {
 };
 
 const EditProductScreen = props => {
+	const [isLoading, setIsLoading] = useState(false);
+	const [error, setError] = useState();
+
 	// determine if editing existing product by attempting to get the product of productId
 	const productId = props.navigation.getParam('productId');
 	const editedProduct = useSelector(state =>
@@ -79,6 +83,12 @@ const EditProductScreen = props => {
 	// , init
 	);
 
+	useEffect(() => {
+		if (error) {
+			Alert.alert('An error occurred.', error, [{ text: 'Okay' }]);
+		}
+	}, [error]);
+
 	// --- useState replaced with useReducer ---
 	// if editing, prepopulate the fields with the existing product,
 	// otherwise start blank form
@@ -90,7 +100,7 @@ const EditProductScreen = props => {
 	// const [description, setDescription] = useState(editedProduct ? editedProduct.description : '');
 
 	// useCallback ensures this action does not trigger an infinite loop
-	const submitHandler = useCallback(() => {
+	const submitHandler = useCallback(async () => {
 		// if (!formState.inputValidities.title) {
 		if (!formState.formIsValid) {
 			Alert.alert('Uh-oh!', 'One or more fields is missing or invalid.', [
@@ -99,24 +109,33 @@ const EditProductScreen = props => {
 			return;
 		}
 
-		if (editedProduct) {
-			dispatch(productsActions.updateProduct(
-				productId, 
-				formState.inputValues.title, 
-				formState.inputValues.description, 
-				formState.inputValues.imageUrl
-			));
-		} else {
-			// add + to convert string into integer
-			dispatch(productsActions.createProduct(
-				formState.inputValues.title, 
-				formState.inputValues.description, 
-				formState.inputValues.imageUrl, 
-				+formState.inputValues.price
-			));
+		setError(null);
+		setIsLoading(true);
+		try {
+			if (editedProduct) {
+				await dispatch(productsActions.updateProduct(
+					productId,
+					formState.inputValues.title,
+					formState.inputValues.description,
+					formState.inputValues.imageUrl
+				));
+			} else {
+				// add + to convert string into integer
+				await dispatch(productsActions.createProduct(
+					formState.inputValues.title,
+					formState.inputValues.description,
+					formState.inputValues.imageUrl,
+					+formState.inputValues.price
+				));
+			}
+			// return to previous screen when finished updating/creating product
+			props.navigation.goBack();
+		} catch (e) {
+			setError(e.message);
 		}
-		// return to previous screen when finished updating/creating product
-		props.navigation.goBack();
+		
+		setIsLoading(false);
+
 		// providing the empty array ensures this method is not re-created
 		// however, when this is not re-created, the values passed to the params are also never updated
 		// e.g. formState would always be false when the form is submitted because
@@ -143,6 +162,14 @@ const EditProductScreen = props => {
 			input: inputId
 		});
 	}, [dispatchFormState]);
+
+	if (isLoading) {
+		return (
+			<View style={styles.centered}>
+				<ActivityIndicator size='large' color={Colors.primary} />
+			</View>
+		)
+	};
 
 	return (
 		// flex:1 is necessary for the component to have an effect on the view
@@ -229,6 +256,11 @@ EditProductScreen.navigationOptions = navigationData => {
 const styles = StyleSheet.create({
 	form: {
 		margin: 20
+	},
+	centered: {
+		flex: 1,
+		justifyContent: 'center',
+		alignItems: 'center'
 	}
 });
 

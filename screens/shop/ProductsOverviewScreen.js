@@ -19,14 +19,15 @@ const ProductsOverviewScreen = props => {
 		// useState calls next to each other get auto-batched
 		// so it does not trigger multiple re-render cycles
 		setError(null);
-		setIsLoading(true);
+		// removed setIsLoading to use in pull to refresh method
+		// setIsLoading(true);
 		try {
 			// await - dispatch will hold until promise is resolved  and then continue next line
 			await dispatch(productsActions.fetchProducts());
 		} catch (e) {
 			setError(e.message);
 		}
-		setIsLoading(false);
+		// setIsLoading(false);
 	}, [dispatch, setIsLoading, setError]);
 
 	useEffect(() => {
@@ -75,7 +76,11 @@ const ProductsOverviewScreen = props => {
 	}
 
 	return (
+		// onRefresh - points to a method to be ran when the pull to refresh action occurs
+		// refreshing - points to a useState variable that indicates if currently loading or not
 		<FlatList
+			// onRefresh={loadProducts}
+			// refreshing={isLoading}
 			data={products}
 			keyExtractor={item => item.id}
 			renderItem={itemData => 
