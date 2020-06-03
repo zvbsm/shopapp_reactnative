@@ -1,10 +1,14 @@
 import React from 'react';
-import { createAppContainer } from 'react-navigation';
+// createSwitchNavigator prevents use of the back button. good for
+// a screen like AuthScreen where the user should be limited to this
+// screen until authorized to proceed elsewhere.
+import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createDrawerNavigator } from 'react-navigation-drawer';
 import { Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import AuthScreen from '../screens/user/AuthScreen';
 import ProductsOverviewScreen from '../screens/shop/ProductsOverviewScreen';
 import ProductDetailsScreen from '../screens/shop/ProductDetailsScreen';
 import CartScreen from '../screens/shop/CartScreen';
@@ -86,6 +90,17 @@ const ShopNavigator = createDrawerNavigator({
 	contentOptions: {
 		activeTintColor: Colors.primary
 	}
-})
+});
 
-export default createAppContainer(ShopNavigator);
+const AuthNavigator = createStackNavigator({
+	Auth: AuthScreen
+}, {
+	defaultNavigationOptions: defaultNavigationOptions
+});
+
+const MainNavigator = createSwitchNavigator({
+	Auth: AuthNavigator,
+	Shop: ShopNavigator
+});
+
+export default createAppContainer(MainNavigator);
