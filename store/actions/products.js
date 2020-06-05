@@ -9,7 +9,8 @@ export const SET_PRODUCTS = 'SET_PRODUCTS';
 export const fetchProducts = () => {
 	// async and await - more modern way of handling promises 
 	// instead of then and catch
-	return async dispatch => {
+	return async (dispatch, getState) => {
+		const userId = getState().auth.userId;
 		// must be wrapped in try catch block to handle await actions
 		try {
 			// logic for redux thunk
@@ -32,7 +33,7 @@ export const fetchProducts = () => {
 			for (const key in responseData) {
 				loadedProducts.push(new Product(
 					key,
-					'u1',
+					responseData[key].ownerId,
 					responseData[key].title,
 					responseData[key].imageUrl,
 					responseData[key].description,
@@ -40,7 +41,11 @@ export const fetchProducts = () => {
 				));
 			}
 
-			dispatch({ type: SET_PRODUCTS, products: loadedProducts });
+			dispatch({ 
+				type: SET_PRODUCTS, 
+				products: loadedProducts, 
+				userProducts: loadedProducts.filter(product => product.ownerId === userId)
+			});
 		} catch (e) {
 			throw e;
 		}
@@ -48,8 +53,9 @@ export const fetchProducts = () => {
 };
 
 export const deleteProduct = productId => {
-	return async dispatch => {
-		const response = await fetch(`https://shopappreactnative.firebaseio.com/products/${productId}.json`, {
+	return async (dispatch, getState) => {
+		const token = getState().auth.token;
+		const response = await fetch(`https://shopappreactnative.firebaseio.com/products/${productId}.json?auth=${token}`, {
 			method: 'DELETE'
 		});
 
@@ -64,19 +70,24 @@ export const deleteProduct = productId => {
 };
 
 export const createProduct = (title, description, imageUrl, price) => {
-	return async dispatch => {
-		const response = await fetch('https://shopappreactnative.firebaseio.com/products.json', {
+	return async (dispatch, getState) => {
+		const userId = getState().auth.userId;
+		const token = getState().auth.token;
+
+		console.log("CreateProduct has userId and token:");
+		console.log(userId);
+		console.log(token);
+		const response = await fetch(`https://shopappreactnative.firebaseio.com/products.json?auth=${token}`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			// firebase will auto generate the id as "name"
 			body: JSON.stringify({
-				id: responseData.name,
 				title,
 				description,
 				imageUrl,
-				price
+				price,
+				ownerId: userId
 			})
 		});
 
@@ -87,11 +98,14 @@ export const createProduct = (title, description, imageUrl, price) => {
 		dispatch({
 			type: CREATE_PRODUCT,
 			productData: {
+				// firebase will auto generate the id as "name"
+				id: responseData.name,
 				// shortcut method for applying values vs { title: title }
 				title,
 				description,
 				imageUrl,
-				price
+				price,
+				ownerId: userId
 			}
 		});
 	}; 
@@ -99,9 +113,10 @@ export const createProduct = (title, description, imageUrl, price) => {
 
 // price not included because it should not be editable
 export const updateProduct = (productId, title, description, imageUrl) => {
-	return async dispatch => {
-
-		const response = await fetch(`https://shopappreactnative.firebaseio.com/products/${productId}.json`, {
+	// getState gives access to the current redux state 
+	return async (dispatch, getState) => {
+		const token = getState().auth.token;
+		const response = await fetch(`https://shopappreactnative.firebaseio.com/products/${productId}.json?auth=${token}`, {
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json'
