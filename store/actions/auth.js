@@ -2,12 +2,18 @@ import Globals from '../../constants/Globals';
 import { AsyncStorage } from 'react-native';
 
 export const AUTHENTICATE = 'AUTHENTICATE';
+export const DEAUTHENTICATE = 'DEAUTHENTICATE';
 
-export const authenticate = (userId, token) => {
-	return { 
-		type: AUTHENTICATE, 
-		userId: userId, 
-		token: token 
+let signoutTimer;
+
+export const authenticate = (userId, token, expirationTime) => {
+	return dispatch => {
+		dispatch(setSignoutTimer(expirationTime));
+		dispatch({ 
+			type: AUTHENTICATE, 
+			userId, 
+			token 
+		});
 	};
 }
 
@@ -41,7 +47,8 @@ export const signup = (email, password) => {
 		dispatch(
 			authenticate(
 				responseData.localId,
-				responseData.idToken
+				responseData.idToken,
+				parseInt(responseData.expiresIn) * 1000
 			)
 		);
 		// futureDate is a timestamp of now + the expiration time
@@ -69,10 +76,14 @@ export const signin = (email, password) => {
 		if (!response.ok) {
 			const errorData = await response.json();
 			const errorId = errorData.error.message;
+
+			console.log("IN SIGNIN METHOD");
+			console.log(errorData);
+
 			let message = "Something went wrong";
 			if (errorId === "EMAIL_NOT_FOUND") {
 				message = "Email not found";
-			} else if (error === "INVALID_PASSWORD") {
+			} else if (errorId === "INVALID_PASSWORD") {
 				message = "Password is invalid";
 			}
 			throw new Error(message);
@@ -82,13 +93,35 @@ export const signin = (email, password) => {
 		dispatch(
 			authenticate(
 				responseData.localId,
-				responseData.idToken
+				responseData.idToken,
+				parseInt(responseData.expiresIn) * 1000
 			)
 		);
 		const futureDate = new Date().getTime() + parseInt(responseData.expiresIn) * 1000;
 		const expirationDate = new Date(futureDate);
 		saveDataToStorage(responseData.idToken, responseData.localId, expirationDate);
 	};
+};
+
+export const signout = () => {
+	clearSignoutTimer();
+	AsyncStorage.removeItem('userData');
+	return { type: DEAUTHENTICATE };
+};
+
+// call setSignoutTimer when auth session begins
+const setSignoutTimer = expirationTime => {
+	return dispatch => {
+		signoutTimer = setTimeout(() => {
+			dispatch(signout());
+		}, expirationTime);
+	}
+};
+
+// timer is only needed when the user is signed in,
+// clear time if the user is signed out
+const clearSignoutTimer = () => {
+	clearTimeout(signoutTimer);
 };
 
 // persisting data with AsyncStorage
