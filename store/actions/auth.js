@@ -1,8 +1,15 @@
 import Globals from '../../constants/Globals';
-export const SIGNUP = 'SIGNUP';
-export const SIGNIN = 'SIGNIN';
+import { AsyncStorage } from 'react-native';
 
-// import globals.js
+export const AUTHENTICATE = 'AUTHENTICATE';
+
+export const authenticate = (userId, token) => {
+	return { 
+		type: AUTHENTICATE, 
+		userId: userId, 
+		token: token 
+	};
+}
 
 export const signup = (email, password) => {
 	return async dispatch => {
@@ -31,11 +38,17 @@ export const signup = (email, password) => {
 		const responseData = await response.json();
 		console.log(responseData);
 
-		dispatch({ 
-			type: SIGNUP,
-			token: responseData.idToken,
-			userId: responseData.localId
-		});
+		dispatch(
+			authenticate(
+				responseData.localId,
+				responseData.idToken
+			)
+		);
+		// futureDate is a timestamp of now + the expiration time
+		const futureDate = new Date().getTime() + parseInt(responseData.expiresIn) * 1000;
+		// convert futureDate back into a javascript date object
+		const expirationDate = new Date(futureDate);
+		saveDataToStorage(responseData.idToken, responseData.localId, expirationDate);
 	};
 };
 
@@ -66,12 +79,27 @@ export const signin = (email, password) => {
 		}
 
 		const responseData = await response.json();
-		console.log(responseData);
-
-		dispatch({
-			type: SIGNIN,
-			token: responseData.idToken,
-			userId: responseData.localId
-		});
+		dispatch(
+			authenticate(
+				responseData.localId,
+				responseData.idToken
+			)
+		);
+		const futureDate = new Date().getTime() + parseInt(responseData.expiresIn) * 1000;
+		const expirationDate = new Date(futureDate);
+		saveDataToStorage(responseData.idToken, responseData.localId, expirationDate);
 	};
 };
+
+// persisting data with AsyncStorage
+// the name of this constant can be anything
+// the parameters should be the data you want to persist
+const saveDataToStorage = (token, userId, expirationDate) => {
+	// the item must be in the form of a string, however
+	// json.stringify can be used to store an object as a string
+	AsyncStorage.setItem('userData', JSON.stringify({
+		token,
+		userId,
+		expirationDate: expirationDate.toISOString()
+	}));
+}
